@@ -1,0 +1,26 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    networks:
+      - homelab-network
+      - nginxproxymanager_my_network
+    volumes:
+      - ./data:/data  
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    networks:
+      - homelab-network
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL="http://backend:5000"
+
+networks:
+  homelab-network:
+  nginxproxymanager_my_network:
+    external: true

@@ -1,0 +1,25 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Docker
+*.log
+docker-compose.override.yml
+.env
+.env.local
+.env.*.local
+.DS_Store
+docker-volume-data/
+
+# Build
+dist/
+build/
+coverage
+
+#Vscode
+.vscode
+
+#DataBase Folder
+data/
+

@@ -1,6 +1,15 @@
 import request from 'supertest';
+import { jest } from '@jest/globals';
 import startServer from '../../../src/server.js';
 import { createTestDatabase, clearDatabase, closeDatabase } from '../config/test-db.js';
+
+// Explicitly define Jest globals if they're not being recognized
+global.describe = global.describe || jest.fn();
+global.beforeAll = global.beforeAll || jest.fn();
+global.beforeEach = global.beforeEach || jest.fn();
+global.afterAll = global.afterAll || jest.fn();
+global.test = global.test || jest.fn();
+global.expect = global.expect || jest.fn();
 
 describe('Services API E2E Tests', () => {
   let app;

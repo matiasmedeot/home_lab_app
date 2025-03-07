@@ -1,4 +1,4 @@
-# HomeLab Services API
+# HomeLab Services API & Frontend Landing Page
 
 A clean architecture-based REST API for managing homelab services built with Node.js, Express, and SQLite. This project follows domain-driven design principles and includes comprehensive unit and E2E testing.
 

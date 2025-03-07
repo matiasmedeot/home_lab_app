@@ -8,9 +8,9 @@
     "dev": "nodemon src/index.js",
     "test:unit": "vitest run",
     "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js",
-    "test": "npm run test:unit && npm run test:e2e",
+    "test": "npm run test:unit && npm run test:e2e && npm run test:coverage",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest --run --coverage --reporter=json --outputFile=./coverage/coverage-summary.json"
   },
   "dependencies": {
     "cors": "^2.8.5",

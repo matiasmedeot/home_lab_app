@@ -5,13 +5,13 @@ export class ServiceRepository extends IServiceRepository {
   constructor(database) {
     super();
     this.database = database;
+    this.ServiceModel = database.getModels().Service;
   }
 
   async findAll() {
     try {
-      const db = await this.database.getDb();
-      const services = await db.all('SELECT * FROM services');
-      return services.map(service => Service.fromDTO(service));
+      const services = await this.ServiceModel.findAll();
+      return services.map(service => this._mapToEntity(service));
     } catch (error) {
       console.error('Error al obtener servicios:', error);
       throw error;
@@ -20,9 +20,8 @@ export class ServiceRepository extends IServiceRepository {
 
   async findById(id) {
     try {
-      const db = await this.database.getDb();
-      const service = await db.get('SELECT * FROM services WHERE id = ?', id);
-      return service ? Service.fromDTO(service) : null;
+      const service = await this.ServiceModel.findByPk(id);
+      return service ? this._mapToEntity(service) : null;
     } catch (error) {
       console.error(`Error al obtener servicio con ID ${id}:`, error);
       throw error;
@@ -32,14 +31,14 @@ export class ServiceRepository extends IServiceRepository {
   async create(service) {
     try {
       service.validate();
-      const db = await this.database.getDb();
-      const result = await db.run(
-        'INSERT INTO services (title, description, link, imageUrl) VALUES (?, ?, ?, ?)',
-        [service.title, service.description, service.link, service.imageUrl]
-      );
+      const createdService = await this.ServiceModel.create({
+        title: service.title,
+        description: service.description,
+        link: service.link,
+        imageUrl: service.imageUrl
+      });
       
-      service.id = result.lastID;
-      return service;
+      return this._mapToEntity(createdService);
     } catch (error) {
       console.error('Error al crear servicio:', error);
       throw error;
@@ -49,14 +48,22 @@ export class ServiceRepository extends IServiceRepository {
   async update(id, service) {
     try {
       service.validate();
-      const db = await this.database.getDb();
-      await db.run(
-        'UPDATE services SET title = ?, description = ?, link = ?, imageUrl = ? WHERE id = ?',
-        [service.title, service.description, service.link, service.imageUrl, id]
+      const [updated] = await this.ServiceModel.update(
+        {
+          title: service.title,
+          description: service.description,
+          link: service.link,
+          imageUrl: service.imageUrl
+        },
+        { where: { id } }
       );
       
-      service.id = parseInt(id);
-      return service;
+      if (updated === 0) {
+        throw new Error(`Servicio con ID ${id} no encontrado`);
+      }
+      
+      const updatedService = await this.ServiceModel.findByPk(id);
+      return this._mapToEntity(updatedService);
     } catch (error) {
       console.error(`Error al actualizar servicio con ID ${id}:`, error);
       throw error;
@@ -65,12 +72,25 @@ export class ServiceRepository extends IServiceRepository {
 
   async delete(id) {
     try {
-      const db = await this.database.getDb();
-      await db.run('DELETE FROM services WHERE id = ?', id);
+      const deleted = await this.ServiceModel.destroy({ where: { id } });
+      if (deleted === 0) {
+        throw new Error(`Servicio con ID ${id} no encontrado`);
+      }
       return true;
     } catch (error) {
       console.error(`Error al eliminar servicio con ID ${id}:`, error);
       throw error;
     }
+  }
+
+  // Método privado para mapear de modelo de la base de datos a entidad de dominio
+  _mapToEntity(model) {
+    return new Service(
+      model.id,
+      model.title,
+      model.description,
+      model.link,
+      model.imageUrl
+    );
   }
 }

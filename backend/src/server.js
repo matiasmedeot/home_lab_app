@@ -7,7 +7,7 @@ import { ServiceUseCases } from './application/usecases/ServiceUseCases.js';
 import { ServiceController } from './controllers/ServiceController.js';
 import { setupServiceRoutes } from './routes/ServiceRoutes.js';
 
-async function startServer() {
+async function startServer(options = {}) {
   try {
     const app = express();
     
@@ -16,8 +16,11 @@ async function startServer() {
     app.use(express.json());
     
     // Configuración de dependencias
-    const database = new Database(config.dataDir);
-    await database.connect();
+    const database = options.database || new Database(config.dataDir);
+    
+    if (!options.database) {
+      await database.connect();
+    }
     
     const serviceRepository = new ServiceRepository(database);
     const serviceUseCases = new ServiceUseCases(serviceRepository);
@@ -32,15 +35,20 @@ async function startServer() {
       res.status(500).json({ message: 'Error interno del servidor' });
     });
     
-    // Iniciar servidor
-    app.listen(config.port, () => {
-      console.log(`Servidor corriendo en puerto ${config.port}`);
-    });
+    // Iniciar servidor (solo si no es un test)
+    if (!options.isTest) {
+      app.listen(config.port, () => {
+        console.log(`Servidor corriendo en puerto ${config.port}`);
+      });
+    }
     
     return app;
   } catch (error) {
     console.error('Error iniciando el servidor:', error);
-    process.exit(1);
+    if (!options.isTest) {
+      process.exit(1);
+    }
+    throw error;
   }
 }
 

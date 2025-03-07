@@ -1,49 +1,57 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { Sequelize } from 'sequelize';
 import path from 'path';
+import ServiceModel from './models/ServiceModel.js';
 
 export class Database {
-  constructor(dataDir = '/data') {
+  constructor(dataDir = '/data', options = {}) {
     this.dataDir = dataDir;
-    this.dbInstance = null;
-    this.dbPath = path.join(this.dataDir, 'homelab.db');
+    this.options = options;
+    this.sequelize = null;
+    this.models = {};
   }
 
   async connect() {
     try {
-      console.log(`Intentando abrir base de datos en: ${this.dbPath}`);
+      const isTest = process.env.NODE_ENV === 'test';
+      const storage = isTest ? ':memory:' : path.join(this.dataDir, 'homelab.db');
       
-      this.dbInstance = await open({
-        filename: this.dbPath,
-        driver: sqlite3.Database,
-        mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE
+      console.log(`Conectando a la base de datos ${isTest ? 'en memoria' : `en: ${storage}`}`);
+      
+      // Crear instancia de Sequelize
+      this.sequelize = new Sequelize({
+        dialect: 'sqlite',
+        storage: storage,
+        logging: false,
+        ...this.options
       });
-
-      await this._initTables();
+      
+      // Inicializar modelos
+      this.models.Service = ServiceModel.init(this.sequelize);
+      
+      // Sincronizar modelos con la base de datos
+      await this.sequelize.sync();
+      
       console.log('Base de datos inicializada correctamente');
-      return this.dbInstance;
+      return this.sequelize;
     } catch (error) {
       console.error('Error conectando a la base de datos:', error);
       throw error;
     }
   }
 
-  async _initTables() {
-    await this.dbInstance.exec(`
-      CREATE TABLE IF NOT EXISTS services (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        link TEXT NOT NULL,
-        imageUrl TEXT
-      )
-    `);
+  async close() {
+    if (this.sequelize) {
+      await this.sequelize.close();
+    }
   }
 
-  async getDb() {
-    if (!this.dbInstance) {
-      await this.connect();
+  getModels() {
+    return this.models;
+  }
+
+  async clearDatabase() {
+    if (this.sequelize) {
+      await this.sequelize.sync({ force: true });
     }
-    return this.dbInstance;
   }
 }

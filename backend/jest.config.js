@@ -1,7 +1,6 @@
 export default {
   testEnvironment: 'node',
   transform: {},
-  extensionsToTreatAsEsm: ['.js'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
@@ -12,10 +11,8 @@ export default {
   resetMocks: true,
   restoreMocks: true,
   testTimeout: 30000,
-  // Add these to ensure Jest correctly recognizes ESM modules
   transformIgnorePatterns: [
     'node_modules/(?!(module-that-needs-to-be-transformed)/)'
   ],
-  // Make sure Jest properly recognizes test globals
-  injectGlobals: true
+  testTimeout: 30000
 };

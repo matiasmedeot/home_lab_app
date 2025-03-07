@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "vitest run && node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./tests/E2E/config/jest.config.js",
     "test:unit": "vitest run",
-    "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./tests/E2E/config/jest.config.js",
+    "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js",
+    "test": "npm run test:unit && npm run test:e2e",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },

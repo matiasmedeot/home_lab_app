@@ -15,6 +15,8 @@ RUN npm install
 # Copiar estructura de directorios
 COPY src ./src
 COPY tests ./tests
+COPY jest.config.js ./jest.config.js
+COPY vitest.config.js ./vitest.config.js
 
 # Ejecutar los tests durante el build
 RUN npm test 

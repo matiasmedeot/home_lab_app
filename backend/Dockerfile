@@ -1,36 +1,36 @@
 FROM node:18-alpine
 
-# Crear directorio de datos y dar permisos
+# Create data directory and set permissions
 RUN mkdir -p /data && chmod 777 /data
 
-# Establecer directorio de trabajo
+# Set working directory
 WORKDIR /app
 
-# Copiar archivos de dependencias
+# Copy dependency files
 COPY package*.json ./
 
-# Instalar dependencias incluyendo las de desarrollo necesarias para tests
+# Install dependencies including development ones needed for tests
 RUN npm install
 
-# Copiar estructura de directorios
+# Copy directory structure
 COPY src ./src
 COPY tests ./tests
 COPY jest.config.js ./jest.config.js
 COPY vitest.config.js ./vitest.config.js
 
-# Ejecutar los tests durante el build
+# Run tests during build
 RUN npm test 
 
-# Exponer puerto
+# Expose port
 EXPOSE 5000
 
-# Variables de entorno
+# Environment variables
 ENV PORT=5000
 ENV DATA_DIR=/data
 ENV NODE_ENV=production
 
-# Volumen para persistencia de base de datos
+# Volume for database persistence
 VOLUME ["/data"]
 
-# Comando para iniciar la aplicación
+# Command to start the application
 CMD ["npm", "start"]

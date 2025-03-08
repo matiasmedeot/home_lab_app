@@ -10,7 +10,7 @@
     "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js",
     "test": "npm run test:unit && npm run test:e2e && npm run test:coverage",
     "test:watch": "vitest",
-    "test:coverage": "vitest --run --coverage --reporter=json --outputFile=./coverage/coverage-summary.json"
+    "test:coverage": "vitest --run --coverage"
   },
   "dependencies": {
     "cors": "^2.8.5",

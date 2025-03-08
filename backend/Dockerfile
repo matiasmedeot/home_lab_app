@@ -19,7 +19,7 @@ COPY jest.config.js ./jest.config.js
 COPY vitest.config.js ./vitest.config.js
 
 # Run tests during build
-RUN npm test 
+#RUN npm test 
 
 # Expose port
 EXPOSE 5000

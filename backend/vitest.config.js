@@ -10,7 +10,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      reporter: ['text'],
+      reporter: ['json','text', ['text-summary', { file: './text-summary.txt' }]],
       include: ['src/**/*.js'],
       exclude: ['node_modules/**', 'tests/**'],
       threshold: { // Umbrales de cobertura
@@ -24,3 +24,5 @@ export default defineConfig({
     watchExclude: ['**/node_modules/**', '**/dist/**']
   }
 })
+
+

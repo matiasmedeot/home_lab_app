@@ -9,11 +9,6 @@ scrape_configs:
     static_configs:
       - targets: ['otel-collector:8889']
 
-  - job_name: 'homelab-api'
-    scrape_interval: 10s
-    static_configs:
-      - targets: ['backend:9464']
-
   - job_name: 'node-exporter'
     scrape_interval: 5s
     static_configs:

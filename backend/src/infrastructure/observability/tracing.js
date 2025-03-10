@@ -35,10 +35,8 @@ export const initTracing = () => {
     }),
     instrumentations: [
       getNodeAutoInstrumentations({
-        // Desactivamos temporalmente algunas instrumentaciones para aislar el problema
         '@opentelemetry/instrumentation-http': { enabled: true },
         '@opentelemetry/instrumentation-express': { enabled: true },
-        '@opentelemetry/instrumentation-sequelize': { enabled: true },
       }),
     ],
   });

@@ -2,7 +2,9 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: 0.0.0.0:4317
       http:
+        endpoint: 0.0.0.0:4318
 
 processors:
   batch:
@@ -10,15 +12,15 @@ processors:
     send_batch_size: 1024
 
 exporters:
-  # Reemplazado el exportador 'logging' por 'debug'
   debug:
     verbosity: detailed
   
-  # Exportador para Prometheus
   prometheus:
-    endpoint: "0.0.0.0:8889"
+    endpoint: 0.0.0.0:8889
+    namespace: homelab
+    const_labels:
+      app: "homelab-api"
   
-  # Exportador para Tempo
   otlp:
     endpoint: "tempo:4317"
     tls:

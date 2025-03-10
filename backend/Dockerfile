@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Create data directory and set permissions
 RUN mkdir -p /data && chmod 777 /data

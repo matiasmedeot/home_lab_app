@@ -6,7 +6,6 @@ import { ServiceRepository } from './infrastructure/repositories/ServiceReposito
 import { ServiceUseCases } from './application/usecases/ServiceUseCases.js';
 import { ServiceController } from './controllers/ServiceController.js';
 import { setupServiceRoutes } from './routes/ServiceRoutes.js';
-import { setupMetricsMiddleware } from './infrastructure/observability/metricsMiddleware.js';
 
 async function startServer(options = {}) {
   try {
@@ -15,7 +14,6 @@ async function startServer(options = {}) {
     // Middleware
     app.use(cors(config.cors));
     app.use(express.json());
-    app.use(setupMetricsMiddleware());
     
     // Endpoint de verificación de salud
     app.get('/health', (req, res) => {

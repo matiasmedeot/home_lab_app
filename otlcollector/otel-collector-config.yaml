@@ -1,0 +1,42 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  # Reemplazado el exportador 'logging' por 'debug'
+  debug:
+    verbosity: detailed
+  
+  # Exportador para Prometheus
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+  
+  # Exportador para Tempo
+  otlp:
+    endpoint: "tempo:4317"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp]
+    
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, prometheus]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]

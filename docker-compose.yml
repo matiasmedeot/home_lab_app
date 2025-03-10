@@ -3,11 +3,25 @@ services:
     build: ./backend
     ports:
       - "5000:5000"
+      - "9464:9464"  # Puerto para métricas de Prometheus
     networks:
       - homelab-network
       - nginxproxymanager_my_network
     volumes:
-      - ./data:/data  
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - otel-collector
+      - prometheus
+    environment:
+      - NODE_ENV=production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_SERVICE_NAME=homelab-api
 
   frontend:
     build: ./frontend
@@ -20,7 +34,81 @@ services:
     environment:
       - REACT_APP_API_URL="http://backend:5000"
 
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otlcollector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+      - "8889:8889"  # Prometheus exporter
+    networks:
+      - homelab-network
+
+  # Prometheus para recolección de métricas
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - homelab-network
+    depends_on:
+      - otel-collector
+    restart: unless-stopped
+
+  # Grafana para visualización
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3001:3000"
+    networks:
+      - homelab-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Tempo para el almacenamiento y consulta de trazas
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml
+      - tempo_data:/tmp/tempo
+    ports:
+      - "3200:3200"  # Tempo UI & API
+    networks:
+      - homelab-network
+    restart: unless-stopped
+
 networks:
   homelab-network:
   nginxproxymanager_my_network:
     external: true
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  tempo_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/tempo-data

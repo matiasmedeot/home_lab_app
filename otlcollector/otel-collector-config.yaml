@@ -12,33 +12,31 @@ processors:
     send_batch_size: 1024
 
 exporters:
-  debug:
-    verbosity: detailed
-  
+
   prometheus:
     endpoint: 0.0.0.0:8889
-    namespace: homelab
     const_labels:
-      app: "homelab-api"
+      app: "homelab_api"
   
   otlp:
     endpoint: "tempo:4317"
     tls:
       insecure: true
 
+connectors:
+  spanmetrics:
+    dimensions:
+      - name: http.method
+      - name: http.status_code
+      - name: http.target
+
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, otlp]
+      exporters: [spanmetrics, otlp]
     
-    metrics:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [debug, prometheus]
-    
-    logs:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [debug]
+    metrics/spanmetrics:
+      receivers: [spanmetrics]
+      exporters: [prometheus]

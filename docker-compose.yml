@@ -6,7 +6,6 @@ services:
       - "9464:9464"  # Puerto para métricas de Prometheus
     networks:
       - homelab-network
-      - nginxproxymanager_my_network
     volumes:
       - ./data:/data
     healthcheck:
@@ -17,11 +16,6 @@ services:
       start_period: 30s
     depends_on:
       - otel-collector
-      - prometheus
-    environment:
-      - NODE_ENV=production
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-      - OTEL_SERVICE_NAME=homelab-api
 
   frontend:
     build: ./frontend
@@ -46,6 +40,8 @@ services:
       - "8889:8889"  # Prometheus exporter
     networks:
       - homelab-network
+    depends_on:
+      - tempo  
 
   # Prometheus para recolección de métricas
   prometheus:
@@ -72,7 +68,10 @@ services:
     image: grafana/grafana:latest
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      #- ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./grafana/dashboards:/etc/grafana/dashboards
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -88,10 +87,9 @@ services:
   # Tempo para el almacenamiento y consulta de trazas
   tempo:
     image: grafana/tempo:latest
-    command: ["-config.file=/etc/tempo.yaml"]
+    command: ["-config.file=/etc/tempo.yaml", "--target=all", "--storage.trace.backend=local", "--storage.trace.local.path=/var/tempo", "--auth.enabled=false"]
     volumes:
       - ./tempo/tempo.yaml:/etc/tempo.yaml
-      - tempo_data:/tmp/tempo
     ports:
       - "3200:3200"  # Tempo UI & API
     networks:
@@ -100,15 +98,7 @@ services:
 
 networks:
   homelab-network:
-  nginxproxymanager_my_network:
-    external: true
 
 volumes:
   prometheus_data:
   grafana_data:
-  tempo_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/tempo-data

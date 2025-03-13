@@ -28,13 +28,13 @@ EXPOSE 5000
 ENV PORT=5000
 ENV DATA_DIR=/data
 ENV NODE_ENV=production
+
 # Variables de entorno para OpenTelemetry
-ENV OTEL_SERVICE_NAME=homelab-api
-ENV OTEL_RESOURCE_ATTRIBUTES=service.version=1.0.0,deployment.environment=production
-ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-ENV OTEL_TRACES_EXPORTER=otlp
-ENV OTEL_METRICS_EXPORTER=otlp,prometheus
-ENV OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+ENV OTEL_SERVICE_NAME=homelab_api
+ENV OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+ENV OTEL_EXPORTER_OTLP_COMPRESSION="gzip"
+#ENV NODE_OPTIONS="--require @opentelemetry/auto-instrumentations-node/register"
+ENV NODE_OPTIONS="--import ./src/infrastructure/observability/tracing.js"
 
 # Volume for database persistence
 VOLUME ["/data"]

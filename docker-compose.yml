@@ -5,7 +5,6 @@ services:
       - "5000:5000"
     networks:
       - homelab-network
-      - nginxproxymanager_my_network
     volumes:
       - ./data:/data
     environment:
@@ -39,8 +38,7 @@ services:
 
 networks:
   homelab-network:
-  nginxproxymanager_my_network:
-    external: true
+
 
 volumes:
   redis-data:

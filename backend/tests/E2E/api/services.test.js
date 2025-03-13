@@ -1,24 +1,29 @@
 import request from 'supertest';
 import startServer from '../../../src/server.js';
-import { createTestDatabase, clearDatabase, closeDatabase } from '../config/test-db.js';
+import container from '../../../src/infrastructure/container/dependency_container.js';
 
 
 describe('Services API E2E Tests', () => {
   let app;
   let database;
   let serviceId;
+  let cache;
 
   beforeAll(async () => {
-    database = await createTestDatabase();
-    app = await startServer({ database, isTest: true });
+     // Asegúrate de que NODE_ENV sea 'test'
+     process.env.NODE_ENV = 'test';
+     // Iniciar servidor (que internamente inicializará el contenedor)
+     app = await startServer();
   });
 
   beforeEach(async () => {
-    await clearDatabase(database);
+     // Resetear el estado de la BD y caché entre pruebas
+     await container.reset();
   });
 
   afterAll(async () => {
-    await closeDatabase(database);
+   // Cerrar todas las conexiones al finalizar
+   await container.close();
   });
 
   const testService = {

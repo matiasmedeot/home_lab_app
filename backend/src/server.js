@@ -6,6 +6,7 @@ import { ServiceRepository } from './infrastructure/repositories/ServiceReposito
 import { ServiceUseCases } from './application/usecases/ServiceUseCases.js';
 import { ServiceController } from './controllers/ServiceController.js';
 import { setupServiceRoutes } from './routes/ServiceRoutes.js';
+import { getLogger } from  './infrastructure/utils/logger.js';
 
 async function startServer(options = {}) {
   try {
@@ -15,11 +16,13 @@ async function startServer(options = {}) {
     app.use(cors(config.cors));
     app.use(express.json());
     
+    const logger = getLogger('homelab_api');
+
     // Endpoint de verificación de salud
     app.get('/health', (req, res) => {
+      logger.info('Operación iniciada', { 'operation': 'miFuncion' });
       res.status(200).json({ status: 'UP' });
     });
-    
     
     // Endpoint de preparación
     app.get('/ready', async (req, res) => {

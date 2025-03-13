@@ -22,6 +22,14 @@ exporters:
     endpoint: "tempo:4317"
     tls:
       insecure: true
+  
+  otlphttp/logs:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+  
+  debug:
+    verbosity: detailed  # Opciones: basic, normal, detailed
 
 connectors:
   spanmetrics:
@@ -40,3 +48,8 @@ service:
     metrics/spanmetrics:
       receivers: [spanmetrics]
       exporters: [prometheus]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlphttp/logs]

@@ -95,6 +95,13 @@ services:
     networks:
       - homelab-network
     restart: unless-stopped
+  
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    networks:
+      - homelab-network
 
 networks:
   homelab-network:

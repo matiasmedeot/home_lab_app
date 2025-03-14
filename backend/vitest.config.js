@@ -6,7 +6,11 @@ export default defineConfig({
       './tests/unit/application/usecases/*.test.js',
       './tests/unit/controllers/*.test.js',
       './tests/unit/domain/models/*.test.js',
-      './tests/unit/infrastructure/repositories/*.test.js'
+      './tests/unit/infrastructure/repositories/*.test.js',
+      './tests/unit/infrastructure/cache/*.test.js',
+      './tests/unit/infrastructure/database/*.test.js',
+      './tests/unit/infrastructure/database/models/*.test.js',
+      './tests/unit/infrastructure/container/*.test.js'
     ],
     coverage: {
       provider: 'v8',

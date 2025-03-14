@@ -17,7 +17,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['json','text', ['text-summary', { file: './text-summary.txt' }]],
       include: ['src/**/*.js'],
-      exclude: ['node_modules/**', 'tests/**'],
+      exclude: [
+        'node_modules/**', 
+        'tests/**',
+        'src/infrastructure/utils/logger.js',
+        'src/infrastructure/observability/metricsMiddleware.js',
+        'src/infrastructure/observability/tracing.js'
+      ],
       threshold: { // Umbrales de cobertura
         statements: 80, // Cobertura mínima de declaraciones
         branches: 75, // Cobertura mínima de ramas
@@ -29,5 +35,3 @@ export default defineConfig({
     watchExclude: ['**/node_modules/**', '**/dist/**']
   }
 })
-
-

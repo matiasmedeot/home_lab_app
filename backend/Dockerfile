@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Create data directory and set permissions
 RUN mkdir -p /data && chmod 777 /data
@@ -28,6 +28,13 @@ EXPOSE 5000
 ENV PORT=5000
 ENV DATA_DIR=/data
 ENV NODE_ENV=production
+
+# Variables de entorno para OpenTelemetry
+ENV OTEL_SERVICE_NAME=homelab_api
+ENV OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+ENV OTEL_EXPORTER_OTLP_COMPRESSION="gzip"
+#ENV NODE_OPTIONS="--require @opentelemetry/auto-instrumentations-node/register"
+ENV NODE_OPTIONS="--import ./src/infrastructure/observability/tracing.js"
 
 # Volume for database persistence
 VOLUME ["/data"]

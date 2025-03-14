@@ -1,12 +1,12 @@
-import express from "express";
-import cors from "cors";
-import { config } from "./configs/Config.js";
-import { Database } from "./infrastructure/database/database.js";
-import { ServiceRepository } from "./infrastructure/repositories/ServiceRepository.js";
-import { ServiceUseCases } from "./application/usecases/ServiceUseCases.js";
-import { ServiceController } from "./controllers/ServiceController.js";
-import { setupServiceRoutes } from "./routes/ServiceRoutes.js";
-import { RedisCache } from "./infrastructure/cache/RedisCache.js";
+import express from 'express';
+import cors from 'cors';
+import { config } from './configs/Config.js';
+import { Database } from './infrastructure/database/database.js';
+import { ServiceRepository } from './infrastructure/repositories/ServiceRepository.js';
+import { ServiceUseCases } from './application/usecases/ServiceUseCases.js';
+import { ServiceController } from './controllers/ServiceController.js';
+import { setupServiceRoutes } from './routes/ServiceRoutes.js';
+import { getLogger } from  './infrastructure/utils/logger.js';
 import { CacheMiddleware } from "./infrastructure/cache/CacheMiddleware.js";
 import container from "./infrastructure/container/dependency_container.js";
 
@@ -20,6 +20,26 @@ async function startServer(options = {}) {
     // Middleware
     app.use(cors(config.cors));
     app.use(express.json());
+    
+    const logger = getLogger('homelab_api');
+
+    // Endpoint de verificación de salud
+    app.get('/health', (req, res) => {
+      logger.info('Operación iniciada', { 'operation': 'miFuncion' });
+      res.status(200).json({ status: 'UP' });
+    });
+    
+    // Endpoint de preparación
+    app.get('/ready', async (req, res) => {
+      try {
+        // Verifica la conexión a la base de datos
+        await options.database.sequelize.authenticate();
+        res.status(200).json({ status: 'READY' });
+      } catch (error) {
+        res.status(503).json({ status: 'NOT_READY', message: error.message });
+      }
+    });
+    
 
     // Obtener las dependencias del contenedor
     const database = container.database;

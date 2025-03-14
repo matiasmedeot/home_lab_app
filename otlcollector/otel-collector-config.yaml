@@ -1,0 +1,55 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    const_labels:
+      app: "homelab_api"
+  
+  otlp:
+    endpoint: "tempo:4317"
+    tls:
+      insecure: true
+  
+  otlphttp/logs:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+  
+  debug:
+    verbosity: detailed  # Opciones: basic, normal, detailed
+
+connectors:
+  spanmetrics:
+    dimensions:
+      - name: http.method
+      - name: http.status_code
+      - name: http.target
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [spanmetrics, otlp]
+    
+    metrics/spanmetrics:
+      receivers: [spanmetrics]
+      exporters: [prometheus]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlphttp/logs]

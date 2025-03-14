@@ -3,16 +3,24 @@ services:
     build: ./backend
     ports:
       - "5000:5000"
+      - "9464:9464"  # Puerto para métricas de Prometheus
     networks:
       - homelab-network
     volumes:
       - ./data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - otel-collector
+      - redis
     environment:
       - REDIS_URL=redis://redis:6379
       - REDIS_TTL=3600
       - REDIS_ENABLED=true
-    depends_on:
-      - redis
   
   redis:
     image: redis:alpine
@@ -36,9 +44,85 @@ services:
     environment:
       - REACT_APP_API_URL="http://backend:5000"
 
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otlcollector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+      - "8889:8889"  # Prometheus exporter
+    networks:
+      - homelab-network
+    depends_on:
+      - tempo  
+
+  # Prometheus para recolección de métricas
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - homelab-network
+    depends_on:
+      - otel-collector
+    restart: unless-stopped
+
+  # Grafana para visualización
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_data:/var/lib/grafana
+      #- ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./grafana/dashboards:/etc/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3001:3000"
+    networks:
+      - homelab-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Tempo para el almacenamiento y consulta de trazas
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yaml", "--target=all", "--storage.trace.backend=local", "--storage.trace.local.path=/var/tempo", "--auth.enabled=false"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"  # Tempo UI & API
+    networks:
+      - homelab-network
+    restart: unless-stopped
+  
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    networks:
+      - homelab-network
+
 networks:
   homelab-network:
 
-
 volumes:
+  prometheus_data:
+  grafana_data:
   redis-data:

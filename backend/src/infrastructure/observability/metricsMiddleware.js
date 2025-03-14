@@ -1,5 +1,6 @@
-// src/infrastructure/observability/metricsMiddleware.js
 import { metrics, trace } from '@opentelemetry/api';
+
+// Example of custom metrics
 
 export function setupMetricsMiddleware() {
   // Crear contadores para las API
